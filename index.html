@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Virtual Ukulele Chord Trainer</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #fff8e1;
+      text-align: center;
+      padding: 20px;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+    }
+    .chord-buttons button {
+      margin: 6px;
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      background-color: #ffd54f;
+      cursor: pointer;
+    }
+    .chord-buttons button:hover {
+      background-color: #ffca28;
+    }
+    canvas {
+      background-color: #fff;
+      border: 2px solid #aaa;
+      margin-top: 20px;
+    }
+    .lesson {
+      margin-top: 20px;
+      background-color: #e1f5fe;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 16px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Virtual Ukulele Chord Trainer 🎸</h1>
+  <p>Select a chord to see where to place your fingers and hear how it sounds!</p>
+
+  <div class="chord-buttons">
+    <button onclick="drawChord('C')">C</button>
+    <button onclick="drawChord('G')">G</button>
+    <button onclick="drawChord('F')">F</button>
+    <button onclick="drawChord('Am')">Am</button>
+  </div>
+
+  <canvas id="ukeCanvas" width="600" height="300"></canvas>
+
+  <div class="lesson" id="lesson-text"></div>
+
+  <!-- Audio -->
+  <audio id="audio-C" src="C.mp3"></audio>
+  <audio id="audio-G" src="G.mp3"></audio>
+  <audio id="audio-F" src="F.mp3"></audio>
+  <audio id="audio-Am" src="Am.mp3"></audio>
+</div>
+
+<script>
+const canvas = document.getElementById("ukeCanvas");
+const ctx = canvas.getContext("2d");
+const lessonText = document.getElementById("lesson-text");
+
+const chordData = {
+  C: {
+    fingers: [{ string: 3, fret: 3, finger: 2 }],
+    lesson: "C chord: Use finger 3 (ring) on the A string, 3rd fret."
+  },
+  G: {
+    fingers: [
+      { string: 0, fret: 2, finger: 1 },
+      { string: 1, fret: 2, finger: 0 },
+      { string: 2, fret: 3, finger: 2 }
+    ],
+    lesson: "G chord: 1 (index) on C string, 2 (middle) on G, 3 (ring) on E."
+  },
+  F: {
+    fingers: [
+      { string: 1, fret: 2, finger: 1 },
+      { string: 2, fret: 1, finger: 0 }
+    ],
+    lesson: "F chord: Finger 1 (index) on E, 2 (middle) on C."
+  },
+  Am: {
+    fingers: [{ string: 1, fret: 2, finger: 1 }],
+    lesson: "Am chord: Use finger 2 (middle) on the C string, 2nd fret."
+  }
+};
+
+const margin = 50;
+const fretCount = 5;
+const stringCount = 4;
+const fretSpacing = 100;
+const stringSpacing = 50;
+
+function drawFretboard() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  for (let i = 0; i < stringCount; i++) {
+    const y = margin + i * stringSpacing;
+    ctx.beginPath();
+    ctx.moveTo(margin, y);
+    ctx.lineTo(margin + fretSpacing * fretCount, y);
+    ctx.strokeStyle = "#444";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  for (let i = 0; i <= fretCount; i++) {
+    const x = margin + i * fretSpacing;
+    ctx.beginPath();
+    ctx.moveTo(x, margin - 20);
+    ctx.lineTo(x, margin + (stringCount - 1) * stringSpacing + 20);
+    ctx.strokeStyle = i === 0 ? "#000" : "#aaa";
+    ctx.lineWidth = i === 0 ? 5 : 2;
+    ctx.stroke();
+
+    if (i > 0) {
+      ctx.fillStyle = "#666";
+      ctx.font = "14px sans-serif";
+      ctx.fillText(i, x - 5, margin + (stringCount * stringSpacing) + 15);
+    }
+  }
+
+  const labels = ["G", "C", "E", "A"];
+  for (let i = 0; i < stringCount; i++) {
+    ctx.fillStyle = "#000";
+    ctx.font = "16px sans-serif";
+    ctx.fillText(labels[i], margin - 30, margin + i * stringSpacing + 5);
+  }
+}
+
+function drawFingers(fingers) {
+  fingers.forEach(pos => {
+    const x = margin + pos.fret * fretSpacing - fretSpacing / 2;
+    const y = margin + pos.string * stringSpacing;
+
+    ctx.beginPath();
+    ctx.arc(x, y, 14, 0, Math.PI * 2);
+    ctx.fillStyle = "#2ecc71";
+    ctx.fill();
+    ctx.strokeStyle = "#2c3e50";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = "#fff";
+    ctx.font = "16px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText((pos.finger + 1).toString(), x, y);
+  });
+}
+
+function playChordAudio(name) {
+  const audio = document.getElementById("audio-" + name);
+  if (audio) {
+    audio.currentTime = 0;
+    audio.play();
+  }
+}
+
+function drawChord(name) {
+  drawFretboard();
+  const chord = chordData[name];
+  drawFingers(chord.fingers);
+  lessonText.textContent = chord.lesson;
+  playChordAudio(name);
+}
+
+drawChord("C");
+</script>
+</body>
+</html>
